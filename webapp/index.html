@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#040C1B">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>TechWing Attendance</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="glass-components.css">
+    <link rel="stylesheet" href="loader.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+
+<body>
+    <!-- Techie Animated Background -->
+    <div class="animated-background">
+        <!-- Tech Grid Pattern -->
+        <div class="tech-grid"></div>
+
+        <!-- Circuit Lines -->
+        <div class="circuit-lines">
+            <div class="circuit-line"></div>
+            <div class="circuit-line"></div>
+            <div class="circuit-line"></div>
+            <div class="circuit-line"></div>
+            <div class="circuit-line"></div>
+            <div class="circuit-line"></div>
+        </div>
+
+        <!-- Energy Lines -->
+        <div class="energy-lines">
+            <div class="energy-line" style="top: 20%; width: 40%;"></div>
+            <div class="energy-line" style="top: 45%; width: 60%; animation-delay: 1s;"></div>
+            <div class="energy-line" style="top: 70%; width: 35%; animation-delay: 2s;"></div>
+            <div class="energy-line" style="top: 30%; right: 0; width: 45%; animation-delay: 0.5s;"></div>
+            <div class="energy-line" style="top: 55%; right: 0; width: 50%; animation-delay: 1.5s;"></div>
+        </div>
+
+        <!-- Power Orbs -->
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+        <div class="orb orb-5"></div>
+
+        <!-- Power Glow Centers -->
+        <div class="power-glow" style="top: 10%; left: 15%;"></div>
+        <div class="power-glow" style="bottom: 20%; right: 10%;"></div>
+
+        <!-- Scan Effects -->
+        <div class="scan-overlay"></div>
+        <div class="scan-beam"></div>
+
+        <!-- Data Particles -->
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+
+        <!-- Corner Brackets -->
+        <div class="corner-bracket top-left"></div>
+        <div class="corner-bracket top-right"></div>
+        <div class="corner-bracket bottom-left"></div>
+        <div class="corner-bracket bottom-right"></div>
+    </div>
+
+    <div id="app">
+        <!-- ==========================================
+             ULTIMATE LOADING SCREEN
+             ========================================== -->
+        <div id="loading-screen" class="loading-screen">
+            <div class="loader-scan-line"></div>
+            <div class="loader-content">
+                <div class="loader-logo-container">
+                    <div class="loader-circle"></div>
+                    <div class="loader-circle-inner"></div>
+                    <img src="assets/images/Techwing.svg" class="loader-logo-svg" alt="TechWing Logo">
+                </div>
+                <div class="loader-text">SYSTEM INITIALIZING...</div>
+                <div class="loader-progress-bar">
+                    <div class="loader-progress-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             LOGIN SCREEN - Matching Flutter LoginScreen
+             ========================================== -->
+        <div id="login-screen" class="active">
+            <div class="login-container">
+                <div class="glass-card login-card">
+                    <!-- Logo -->
+                    <div class="login-logo">
+                        <img src="assets/images/Techwing.svg" class="logo-svg" alt="TechWing Logo"
+                            style="width: 200px; height: auto;">
+                    </div>
+
+                    <h1 class="login-title">Attendance System</h1>
+
+                    <!-- Login Form -->
+                    <form id="login-form" class="login-form">
+                        <!-- Role Selector -->
+                        <div class="role-selector">
+                            <button type="button" class="role-btn active" data-role="admin" id="role-admin-btn">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Admin</span>
+                            </button>
+                            <button type="button" class="role-btn" data-role="user" id="role-user-btn">
+                                <i class="fas fa-user"></i>
+                                <span>User</span>
+                            </button>
+                        </div>
+                        <input type="hidden" id="login-role" value="admin">
+
+                        <div class="input-group">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="username" class="glass-input" placeholder="Enter your name" required>
+                            <span class="input-hint">@gmail.com will be added automatically</span>
+                        </div>
+
+                        <div class="input-group">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" class="glass-input" placeholder="Password" required>
+                        </div>
+
+                        <div id="login-error" class="error-message hidden"></div>
+
+                        <button type="submit" id="login-btn" class="gradient-btn">
+                            <span class="btn-text">Login</span>
+                            <span class="btn-loader hidden"></span>
+                        </button>
+
+                        <button type="button" id="sync-credentials-btn" class="stroke-btn">
+                            <i class="fas fa-sync"></i>
+                            <span>Sync Credentials</span>
+                        </button>
+
+                        <button type="button" id="demo-login-btn" class="stroke-btn"
+                            style="margin-top: 10px; border-color: var(--techwing-orange); color: var(--techwing-orange);">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Demo Login (Bypass)</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             MAIN APP - 3 Tab Navigation (Home, Dashboard, Settings)
+             ========================================== -->
+        <div id="main-app" class="hidden">
+            <!-- Tab Content Container -->
+            <div class="screen-container">
+
+                <!-- ==========================================
+                     HOME (Scanner) TAB - Index 0
+                     Matches Flutter _buildModeSelectionScreen
+                     ========================================== -->
+                <div id="home-screen" class="screen home-screen">
+                    <div class="logo-header">
+                        <img src="assets/images/Techwing.svg" class="home-header-icon" alt="TechWing"
+                            style="height: 50px;">
+                    </div>
+
+                    <!-- Greeting Section - Matches Flutter "Hi, [Name] garu" -->
+                    <div class="greeting-section">
+                        <div class="greeting-hi">Hi,</div>
+                        <div class="greeting-name">
+                            <span id="user-display-name">Demo User</span>
+                            <span class="greeting-suffix"> garu</span>
+                        </div>
+                    </div>
+
+                    <!-- Mode Cards - Matching Flutter _buildModeCard structure -->
+
+                    <!-- 1. Attendance Card -->
+                    <div class="glass-card mode-card">
+                        <div class="mode-card-header">
+                            <div class="mode-icon">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div class="mode-info">
+                                <div class="mode-title">Attendance</div>
+                                <div class="mode-subtitle">Scan QR codes or check attendance records</div>
+                            </div>
+                        </div>
+                        <div class="mode-actions">
+                            <button class="stroke-btn" id="check-attendance-btn">
+                                <i class="fas fa-search"></i>
+                                <span>Check</span>
+                            </button>
+                            <button class="gradient-btn" id="scan-attendance-btn">
+                                <i class="fas fa-qrcode"></i>
+                                <span>Scan</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Class Details Card -->
+                    <div class="glass-card mode-card">
+                        <div class="mode-card-header">
+                            <div class="mode-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="mode-info">
+                                <div class="mode-title">Batch Details</div>
+                                <div class="mode-subtitle">View and manage batch information and student details</div>
+                            </div>
+                        </div>
+                        <div class="mode-actions">
+                            <button class="gradient-btn" id="view-class-btn">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>View Details</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Student Details Card -->
+                    <div class="glass-card mode-card">
+                        <div class="mode-card-header">
+                            <div class="mode-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="mode-info">
+                                <div class="mode-title">Student Details</div>
+                                <div class="mode-subtitle">Search for student information by roll number</div>
+                            </div>
+                        </div>
+                        <div class="mode-actions">
+                            <button class="gradient-btn" id="search-student-btn">
+                                <i class="fas fa-search"></i>
+                                <span>Search</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. Mock Interviews Card -->
+                    <div class="glass-card mode-card">
+                        <div class="mode-card-header">
+                            <div class="mode-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div class="mode-info">
+                                <div class="mode-title">Mock Interviews</div>
+                                <div class="mode-subtitle">Conduct and manage mock interviews for students</div>
+                            </div>
+                        </div>
+                        <div class="mode-actions">
+                            <button class="gradient-btn" id="start-interview-btn">
+                                <i class="fas fa-briefcase"></i>
+                                <span>Start Interview</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     SCANNER SCREEN - Shows after clicking Scan
+                     ========================================== -->
+                <div id="scanner-screen" class="screen scanner-screen hidden">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="scanner-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title">QR Scanner</div>
+                    </div>
+
+                    <!-- Batch Selector -->
+                    <div class="glass-card"
+                        style="padding: var(--small-spacing) var(--medium-spacing); margin-bottom: 4px;">
+                        <div style="display: flex; gap: var(--medium-spacing); flex-wrap: wrap; align-items: center;">
+                            <div style="flex: 1; min-width: 140px;">
+                                <label
+                                    style="display: block; font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 2px;">Select
+                                    Batch</label>
+                                <div class="custom-dropdown" id="scanner-batch-dropdown-wrapper">
+                                    <button class="dropdown-trigger" id="scanner-batch-trigger">
+                                        <span class="dropdown-text">Select a batch...</span>
+                                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                    </button>
+                                    <input type="hidden" id="scanner-batch-dropdown" value="">
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Session</div>
+                                <div id="scanner-session-display"
+                                    style="font-weight: 600; color: var(--techwing-orange);">
+                                    Morning</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scanner Batch Dropdown Portal -->
+                    <div class="dropdown-menu-portal" id="scanner-batch-menu-portal">
+                        <div class="dropdown-menu" id="scanner-batch-menu"></div>
+                    </div>
+
+                    <!-- Scanner Frame -->
+                    <div class="glass-card" style="padding: var(--medium-spacing);">
+                        <div class="scanner-frame" id="scanner-frame">
+                            <div class="scanner-corners">
+                                <div class="corner top-left"></div>
+                                <div class="corner top-right"></div>
+                                <div class="corner bottom-left"></div>
+                                <div class="corner bottom-right"></div>
+                            </div>
+                            <div class="scan-line"></div>
+                            <div class="scanner-placeholder">
+                                <i class="fas fa-qrcode"></i>
+                                <p>Tap to simulate scan</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Entry -->
+                    <div class="glass-card manual-entry">
+                        <h3><i class="fas fa-keyboard"></i> Manual Entry</h3>
+                        <div class="input-row">
+                            <input type="text" id="manual-pin" class="glass-input" placeholder="Enter PIN Number">
+                            <button class="gradient-btn" id="submit-pin-btn">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Scans -->
+                    <div class="glass-card recent-scans">
+                        <h3><i class="fas fa-history"></i> Recent Scans</h3>
+                        <div class="recent-scans-list" id="recent-scans-list">
+                            <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                                No recent scans
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scan Result Popup -->
+                    <div id="scan-result" class="scan-result hidden">
+                        <div class="result-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="result-info">
+                            <span class="result-name">Student Name</span>
+                            <span class="result-pin">PIN: 24CS001</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     SESSION SETUP SCREEN
+                     ========================================== -->
+                <div id="session-setup-screen" class="screen hidden" style="padding: var(--medium-spacing);">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="session-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title">Session Setup</div>
+                    </div>
+
+                    <div class="glass-card" style="padding: var(--large-spacing); margin-top: var(--medium-spacing);">
+                        <h3 style="color: var(--techwing-orange); margin-bottom: var(--large-spacing);">
+                            <i class="fas fa-cog"></i> Configure Session
+                        </h3>
+
+                        <div style="margin-bottom: var(--medium-spacing);">
+                            <label
+                                style="display: block; margin-bottom: var(--small-spacing); color: var(--text-secondary);">Select
+                                Batch</label>
+                            <div class="custom-dropdown" id="session-class-dropdown-wrapper">
+                                <button class="dropdown-trigger" id="session-class-trigger">
+                                    <span class="dropdown-text">Select a batch...</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <input type="hidden" id="session-class-dropdown" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Session Class Dropdown Portal -->
+                    <div class="dropdown-menu-portal" id="session-class-menu-portal">
+                        <div class="dropdown-menu" id="session-class-menu"></div>
+                    </div>
+
+                    <!-- Session Type Selection -->
+                    <div class="glass-card" style="padding: var(--large-spacing); margin-top: var(--medium-spacing);">
+                        <div style="margin-bottom: var(--medium-spacing);">
+                            <label
+                                style="display: block; margin-bottom: var(--small-spacing); color: var(--text-secondary);">Session
+                                Type</label>
+                            <div class="toggle-container">
+                                <span class="toggle-text">AM</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="session-type-checkbox">
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="toggle-text">PM</span>
+                            </div>
+                        </div>
+
+                        <button class="gradient-btn" style="width: 100%; margin-top: var(--large-spacing);"
+                            id="start-session-btn">
+                            <i class="fas fa-play"></i>
+                            <span>Start Session</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     ATTENDANCE CHECK SCREEN
+                     ========================================== -->
+                <div id="attendance-check-screen" class="screen hidden" style="padding: var(--medium-spacing);">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="attendance-check-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title">Attendance Check</div>
+                    </div>
+
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <div style="margin-bottom: var(--medium-spacing);">
+                            <label
+                                style="display: block; margin-bottom: var(--small-spacing); color: var(--text-secondary);">Select
+                                Batch</label>
+                            <div class="custom-dropdown" id="check-class-dropdown-wrapper">
+                                <button class="dropdown-trigger" id="check-class-trigger">
+                                    <span class="dropdown-text">Select a batch...</span>
+                                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                </button>
+                                <input type="hidden" id="check-class-dropdown" value="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Check Class Dropdown Portal -->
+                    <div class="dropdown-menu-portal" id="check-class-menu-portal">
+                        <div class="dropdown-menu" id="check-class-menu"></div>
+                    </div>
+
+                    <!-- Attendance Summary REMOVED -->
+
+                    <!-- Search and Filters -->
+                    <div class="glass-card" style="padding: 15px; margin-top: 15px;">
+                        <!-- Search -->
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <i class="fas fa-search input-icon"></i>
+                            <input type="text" id="check-student-search" class="glass-input"
+                                placeholder="Search Name or Roll No">
+                        </div>
+
+                        <!-- Filters -->
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <div class="custom-dropdown" id="check-filter-branch-dropdown-wrapper">
+                                    <button class="dropdown-trigger" id="check-filter-branch-trigger">
+                                        <span class="dropdown-text"> All Branches</span>
+                                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                    </button>
+                                    <input type="hidden" id="check-filter-branch" value="">
+                                </div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="custom-dropdown" id="check-filter-combo-dropdown-wrapper">
+                                    <button class="dropdown-trigger" id="check-filter-combo-trigger">
+                                        <span class="dropdown-text"> All Combos</span>
+                                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                    </button>
+                                    <input type="hidden" id="check-filter-combo" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Dropdown Portals -->
+                    <div class="dropdown-menu-portal" id="check-filter-branch-menu-portal">
+                        <div class="dropdown-menu" id="check-filter-branch-menu"></div>
+                    </div>
+                    <div class="dropdown-menu-portal" id="check-filter-combo-menu-portal">
+                        <div class="dropdown-menu" id="check-filter-combo-menu"></div>
+                    </div>
+
+                    <!-- Student List -->
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <div class="student-list" id="check-student-list"></div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     CLASS DETAILS SCREEN
+                     ========================================== -->
+                <div id="class-details-screen" class="screen hidden" style="padding: var(--medium-spacing);">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="class-details-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title">Batch Details</div>
+                    </div>
+
+                    <div style="margin-top: var(--medium-spacing);">
+                        <div id="class-list-container"></div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     BATCH OVERVIEW SCREEN (New)
+                     ========================================== -->
+                <div id="batch-overview-screen" class="screen hidden" style="padding: var(--medium-spacing);">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="batch-overview-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title" id="batch-overview-title">Batch Overview</div>
+                    </div>
+
+                    <div style="margin-top: var(--medium-spacing);">
+                        <!-- Batch Stats -->
+                        <div class="glass-card" style="padding: 20px; text-align: center; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-around; margin-bottom: 15px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 2.5rem; font-weight: 700; color: var(--techwing-orange);"
+                                        id="batch-total-students">0</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.875rem;">Total</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 2.5rem; font-weight: 700; color: #2EC4B6;"
+                                        id="batch-present-today">-</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.875rem;">Present</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 2.5rem; font-weight: 700; color: #E71D36;"
+                                        id="batch-absent-today">-</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.875rem;">Absent</div>
+                                </div>
+                            </div>
+
+                            <div
+                                style="font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                                Last Sync: <span id="batch-last-sync">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Actions Row -->
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <button class="glass-btn primary-btn" id="batch-check-btn" style="flex: 1; padding: 12px;">
+                                <i class="fas fa-clipboard-check"></i> Check
+                            </button>
+                            <button class="glass-btn primary-btn" id="batch-session-btn"
+                                style="flex: 1; padding: 12px;">
+                                <i class="fas fa-qrcode"></i> Start Session
+                            </button>
+                        </div>
+
+                        <!-- Filters -->
+                        <div class="glass-card" style="padding: 15px; margin-bottom: 15px;">
+                            <h3 class="section-title" style="margin-bottom: 15px;">Filters</h3>
+                            <div style="display: flex; gap: 10px;">
+                                <div style="flex: 1;">
+                                    <div class="custom-dropdown" id="batch-filter-branch-dropdown-wrapper">
+                                        <button class="dropdown-trigger" id="batch-filter-branch-trigger">
+                                            <span class="dropdown-text"> All Branches</span>
+                                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                        </button>
+                                        <input type="hidden" id="batch-filter-branch" value="">
+                                    </div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div class="custom-dropdown" id="batch-filter-combo-dropdown-wrapper">
+                                        <button class="dropdown-trigger" id="batch-filter-combo-trigger">
+                                            <span class="dropdown-text"> All Combos</span>
+                                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                        </button>
+                                        <input type="hidden" id="batch-filter-combo" value="">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Portals (Moved outside glass-card to avoid overflow clipping) -->
+                        <div class="dropdown-menu-portal" id="batch-filter-branch-menu-portal">
+                            <div class="dropdown-menu" id="batch-filter-branch-menu"></div>
+                        </div>
+                        <div class="dropdown-menu-portal" id="batch-filter-combo-menu-portal">
+                            <div class="dropdown-menu" id="batch-filter-combo-menu"></div>
+                        </div>
+
+                        <!-- Student List -->
+                        <h3 class="section-title"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            Students
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <span id="batch-student-count"
+                                    style="font-size: 0.8rem; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 10px;">0</span>
+                                <button class="icon-btn" id="add-student-btn" data-admin-only
+                                    style="width: 28px; height: 28px; background: rgba(0, 200, 83, 0.2); color: #00e676; border: 1px solid rgba(0, 200, 83, 0.3);">
+                                    <i class="fas fa-plus" style="font-size: 0.8rem;"></i>
+                                </button>
+                            </div>
+                        </h3>
+                        <div id="batch-student-list" style="padding-bottom: 80px;">
+                            <!-- Students will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     STUDENT SEARCH SCREEN
+                     ========================================== -->
+                <div id="student-search-screen" class="screen hidden" style="padding: var(--medium-spacing);">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="student-search-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title">Student Search</div>
+                    </div>
+
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <div class="input-row">
+                            <input type="text" id="student-search-input" class="glass-input"
+                                placeholder="Search by name or PIN...">
+                            <button class="gradient-btn" id="search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="glass-card" style="padding: 15px; margin-top: 15px;">
+                        <h3 class="section-title" style="margin-bottom: 15px;">Filters</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <div style="flex: 1;">
+                                <div class="custom-dropdown" id="search-filter-batch-dropdown-wrapper">
+                                    <button class="dropdown-trigger" id="search-filter-batch-trigger">
+                                        <span class="dropdown-text"> All Batches</span>
+                                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                    </button>
+                                    <input type="hidden" id="search-filter-batch" value="">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <div style="flex: 1;">
+                                <div class="custom-dropdown" id="search-filter-branch-dropdown-wrapper">
+                                    <button class="dropdown-trigger" id="search-filter-branch-trigger">
+                                        <span class="dropdown-text"> All Branches</span>
+                                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                    </button>
+                                    <input type="hidden" id="search-filter-branch" value="">
+                                </div>
+                            </div>
+                            <div style="flex: 1;">
+                                <div class="custom-dropdown" id="search-filter-combo-dropdown-wrapper">
+                                    <button class="dropdown-trigger" id="search-filter-combo-trigger">
+                                        <span class="dropdown-text"> All Combos</span>
+                                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                    </button>
+                                    <input type="hidden" id="search-filter-combo" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Dropdown Portals -->
+                    <div class="dropdown-menu-portal" id="search-filter-batch-menu-portal">
+                        <div class="dropdown-menu" id="search-filter-batch-menu"></div>
+                    </div>
+                    <div class="dropdown-menu-portal" id="search-filter-branch-menu-portal">
+                        <div class="dropdown-menu" id="search-filter-branch-menu"></div>
+                    </div>
+                    <div class="dropdown-menu-portal" id="search-filter-combo-menu-portal">
+                        <div class="dropdown-menu" id="search-filter-combo-menu"></div>
+                    </div>
+
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <div
+                            style="margin-bottom: var(--small-spacing); color: var(--text-secondary); font-size: 0.875rem;">
+                            <span id="search-results-count">0</span> results
+                        </div>
+                        <div class="student-list" id="search-results-list" style="max-height: 400px;"></div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     STUDENT DETAILS SCREEN
+                     ========================================== -->
+                <div id="student-details-screen" class="screen hidden" style="padding: var(--medium-spacing);">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="student-details-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title">Student Details</div>
+                    </div>
+
+                    <div class="glass-card"
+                        style="padding: var(--large-spacing); margin-top: var(--medium-spacing); text-align: center;">
+                        <div
+                            style="font-size: 4rem; color: var(--techwing-orange); margin-bottom: var(--medium-spacing);">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h2 id="detail-student-name" style="font-size: 1.5rem; margin-bottom: var(--small-spacing);">
+                            Student Name</h2>
+                        <div id="detail-student-pin" style="color: var(--text-secondary);">PIN: 24CS001</div>
+                    </div>
+
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--medium-spacing);">
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Email</div>
+                                <div id="detail-email" style="font-weight: 500;">email@example.com</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Phone</div>
+                                <div id="detail-phone" style="font-weight: 500;">9876543210</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Branch</div>
+                                <div id="detail-branch" style="font-weight: 500;">CSE</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Combo</div>
+                                <div id="detail-combo" style="font-weight: 500;">A1</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card"
+                        style="padding: var(--medium-spacing); margin-top: var(--medium-spacing); text-align: center;">
+                        <h3 style="color: var(--techwing-orange); margin-bottom: var(--medium-spacing);">Attendance
+                            Stats</h3>
+
+                        <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--success-color);"
+                                    id="detail-attendance-percent">0%</div>
+                                <div style="color: var(--text-secondary); font-size: 0.8rem;">Percentage</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--text-primary);"
+                                    id="detail-present-days">0</div>
+                                <div style="color: var(--text-secondary); font-size: 0.8rem;">Present</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--text-muted);"
+                                    id="detail-total-days">0</div>
+                                <div style="color: var(--text-secondary); font-size: 0.8rem;">Total</div>
+                            </div>
+                        </div>
+
+                        <!-- History List -->
+                        <div style="text-align: left; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                            <h4 style="color: var(--text-secondary); margin-bottom: 15px; font-size: 0.9rem;">Recent
+                                History</h4>
+                            <div id="detail-history-list"
+                                style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     MOCK INTERVIEW SCREEN
+                     ========================================== -->
+                <div id="mock-interview-screen" class="screen hidden" style="padding: var(--medium-spacing);">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="interview-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title">Mock Interview</div>
+                    </div>
+
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <h3 style="color: var(--techwing-orange); margin-bottom: var(--medium-spacing);">
+                            <i class="fas fa-user"></i> Select Student
+                        </h3>
+                        <div class="custom-dropdown" id="interview-class-dropdown-wrapper"
+                            style="margin-bottom: var(--medium-spacing);">
+                            <button class="dropdown-trigger" id="interview-class-trigger">
+                                <span class="dropdown-text">Select Batch...</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                            <input type="hidden" id="interview-class-dropdown" value="">
+                        </div>
+                        <div class="input-group" style="margin-bottom: var(--medium-spacing);">
+                            <i class="fas fa-id-card input-icon"></i>
+                            <input type="text" id="interview-student-pin-input" class="glass-input"
+                                placeholder="Enter Student Roll Number/PIN">
+                        </div>
+                        <div id="interview-student-preview" style="margin-top: var(--medium-spacing);"></div>
+
+                        <!-- Student Profile & History Container -->
+                        <div id="interview-student-profile" class="hidden"
+                            style="margin-top: var(--medium-spacing); border-top: 1px solid rgba(255,255,255,0.1); padding-top: var(--medium-spacing);">
+                            <div style="display: flex; align-items: center; margin-bottom: var(--medium-spacing);">
+                                <div class="student-avatar" id="interview-avatar"
+                                    style="width: 50px; height: 50px; font-size: 1.5rem; margin-right: var(--medium-spacing);">
+                                    ?</div>
+                                <div>
+                                    <div id="interview-name" style="font-weight: 700; font-size: 1.1rem;">Student Name
+                                    </div>
+                                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                        <span id="interview-branch">Branch</span> • <span
+                                            id="interview-combo">Combo</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="gradient-btn" id="start-new-interview-btn"
+                                style="width: 100%; margin-bottom: var(--medium-spacing);">
+                                <i class="fas fa-plus"></i> Start New Interview
+                            </button>
+
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px;">
+                                <h4 style="color: var(--text-secondary); margin-bottom: 10px; font-size: 0.9rem;">
+                                    Previous Interviews</h4>
+                                <div id="interview-history-list"
+                                    style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                                    <!-- History items will be injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interview Class Dropdown Portal -->
+                    <div class="dropdown-menu-portal" id="interview-class-menu-portal">
+                        <div class="dropdown-menu" id="interview-class-menu"></div>
+                    </div>
+
+                    <!-- Interview Student Dropdown Portal -->
+                    <div class="dropdown-menu-portal" id="interview-student-menu-portal">
+                        <div class="dropdown-menu" id="interview-student-menu"></div>
+                    </div>
+
+                </div>
+
+                <!-- Detail View Modal -->
+                <div id="interview-detail-modal" class="modal hidden">
+                    <div class="modal-content glass-card" style="max-width: 500px; max-height: 80vh; overflow-y: auto;">
+                        <span class="close-modal" id="close-interview-modal">&times;</span>
+                        <h2 id="modal-interview-date" style="margin-bottom: 20px;">Interview Details</h2>
+                        <div id="modal-interview-content"></div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     ACTIVE INTERVIEW SCREEN (New)
+                     ========================================== -->
+                <div id="active-interview-screen" class="screen hidden" style="padding: var(--medium-spacing);">
+                    <div class="scanner-header">
+                        <button class="back-btn" id="active-interview-back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div class="scanner-title">New Interview</div>
+                    </div>
+
+                    <h3 class="section-title"
+                        style="margin-top: var(--medium-spacing); margin-bottom: var(--medium-spacing); color: var(--techwing-orange); text-align: center;">
+                        Evaluation Form
+                    </h3>
+
+                    <!-- Resume Score -->
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <h3 class="section-title" style="margin-bottom: var(--medium-spacing);">
+                            <i class="fas fa-file-alt"></i> Resume Score
+                        </h3>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="range" id="resume-score-slider" class="glass-slider" min="0" max="10"
+                                step="0.5" value="5" style="flex: 1;">
+                            <div style="width: 50px; text-align: center; font-weight: bold; font-size: 1.2rem; color: var(--techwing-orange);"
+                                id="resume-score-display">5</div>
+                        </div>
+                    </div>
+
+                    <!-- TR Section -->
+                    <div class="glass-card"
+                        style="padding: var(--medium-spacing); margin-top: var(--medium-spacing); border-left: 4px solid var(--techwing-orange);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span class="toggle-label" style="font-size: 1.1rem; color: var(--techwing-orange);"><i
+                                    class="fas fa-code"></i> Technical (TR)</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-tr" data-round="tr" onchange="toggleRound('tr')">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div id="round-section-tr" class="hidden"
+                            style="padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div class="metric-container">
+                                <label>Problem Solving Ability</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="tr-problem-solving"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Core Technical Competence</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="tr-tech-competence"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Hands-on Experience</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="tr-hands-on" min="0"
+                                    max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Learning Agility</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="tr-agility" min="0"
+                                    max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Technical Communication</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="tr-communication"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HR Section -->
+                    <div class="glass-card"
+                        style="padding: var(--medium-spacing); margin-top: var(--medium-spacing); border-left: 4px solid var(--techwing-orange);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span class="toggle-label" style="font-size: 1.1rem; color: var(--techwing-orange);"><i
+                                    class="fas fa-users"></i> HR Round</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-hr" data-round="hr" onchange="toggleRound('hr')">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div id="round-section-hr" class="hidden"
+                            style="padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div class="metric-container">
+                                <label>Cultural Fit & Values</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="hr-cultural-fit"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Attitude & Mindset</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="hr-attitude" min="0"
+                                    max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Communication & EQ</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="hr-communication"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Motivation & Career Intent</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="hr-motivation"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Stability & Commitment</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="hr-stability"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MR Section -->
+                    <div class="glass-card"
+                        style="padding: var(--medium-spacing); margin-top: var(--medium-spacing); border-left: 4px solid var(--techwing-orange);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span class="toggle-label" style="font-size: 1.1rem; color: var(--techwing-orange);"><i
+                                    class="fas fa-user-tie"></i> Managerial (MR)</span>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-mr" data-round="mr" onchange="toggleRound('mr')">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div id="round-section-mr" class="hidden"
+                            style="padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div class="metric-container">
+                                <label>Ownership & Accountability</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="mr-ownership"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Decision-Making Skills</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="mr-decision-making"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Stakeholder Management</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="mr-stakeholder"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Business Understanding</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="mr-business" min="0"
+                                    max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                            <div class="metric-container">
+                                <label>Leadership Potential</label>
+                                <input type="range" class="glass-slider metric-slider" data-metric="mr-leadership"
+                                    min="0" max="10" step="1" value="5">
+                                <span class="metric-val">5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes & Actions -->
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <h3 style="color: var(--techwing-orange); margin-bottom: var(--medium-spacing);">
+                            <i class="fas fa-sticky-note"></i> Notes
+                        </h3>
+                        <textarea id="interview-notes" class="glass-input"
+                            style="min-height: 100px; resize: vertical; border-radius: var(--radius-lg);"
+                            placeholder="Enter notes..."></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <button class="stroke-btn" style="flex: 1;" id="clear-interview-btn">Clear</button>
+                        <button class="gradient-btn" style="flex: 1;" id="save-interview-btn">Save Interview</button>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     DASHBOARD TAB - Index 1
+                     ========================================== -->
+                <div id="dashboard-screen" class="screen dashboard-screen hidden">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--medium-spacing);">
+                        <h2 style="font-size: 1.25rem;">Dashboard</h2>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);" id="dashboard-date"></div>
+                    </div>
+
+                    <!-- Class Selector Trigger - Inside glass card -->
+                    <!-- Class Selector & Session Toggle -->
+                    <div class="glass-card"
+                        style="padding: var(--medium-spacing); margin-bottom: var(--medium-spacing);">
+                        <div style="display: flex; flex-direction: column; gap: var(--medium-spacing);">
+                            <!-- Batch Dropdown -->
+                            <div>
+                                <label
+                                    style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Select
+                                    Batch</label>
+                                <div class="custom-dropdown" id="dashboard-class-dropdown-wrapper">
+                                    <button class="dropdown-trigger" id="dashboard-class-trigger">
+                                        <span class="dropdown-text">Select a batch...</span>
+                                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                                    </button>
+                                    <input type="hidden" id="dashboard-class-dropdown" value="">
+                                </div>
+                            </div>
+
+                            <!-- Session Toggle -->
+                            <div>
+                                <label
+                                    style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">Session</label>
+                                <div class="toggle-container">
+                                    <span class="toggle-text">AM</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="dashboard-session-checkbox">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span class="toggle-text">PM</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Menu - OUTSIDE glass-card so blur works -->
+                    <div class="dropdown-menu-portal" id="dashboard-class-menu-portal">
+                        <div class="dropdown-menu" id="dashboard-class-menu">
+                            <!-- Options will be populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards with Progress Bars -->
+                    <div class="summary-cards">
+                        <!-- Present Card -->
+                        <div class="glass-card summary-card">
+                            <div class="card-icon-wrapper present">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="card-content">
+                                <div class="stat-header">
+                                    <div class="summary-value present" id="present-count">0</div>
+                                    <div class="summary-percent present" id="present-percent">0%</div>
+                                </div>
+                                <div class="summary-label">Present</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill present" id="present-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Absent Card -->
+                        <div class="glass-card summary-card">
+                            <div class="card-icon-wrapper absent">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="card-content">
+                                <div class="stat-header">
+                                    <div class="summary-value absent" id="absent-count">0</div>
+                                    <div class="summary-percent absent" id="absent-percent">0%</div>
+                                </div>
+                                <div class="summary-label">Absent</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill absent" id="absent-progress" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Total Card -->
+                        <div class="glass-card summary-card">
+                            <div class="card-icon-wrapper total">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="card-content">
+                                <div class="stat-header">
+                                    <div class="summary-value total" id="total-count">0</div>
+                                    <div class="summary-percent total">100%</div>
+                                </div>
+                                <div class="summary-label">Total Students</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill total" style="width: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sync Section -->
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--medium-spacing);">
+                            <h3 style="color: var(--techwing-orange);">
+                                <i class="fas fa-sync"></i> Sync Status
+                            </h3>
+                            <button class="gradient-btn" id="manual-sync-btn" style="padding: 8px 16px;">
+                                <i class="fas fa-cloud-upload-alt"></i> Sync
+                            </button>
+                        </div>
+                        <div id="sync-progress" class="hidden" style="margin-bottom: var(--medium-spacing);">
+                            <div
+                                style="height: 8px; background: var(--glass-bg); border-radius: 4px; overflow: hidden;">
+                                <div id="progress-fill"
+                                    style="height: 100%; background: var(--gradient-primary); width: 0%; transition: width 0.3s;">
+                                </div>
+                            </div>
+                            <div id="progress-text"
+                                style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 4px;">Syncing...
+                            </div>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.875rem; color: var(--text-secondary);">
+                            <span>Pending: <span id="pending-count">0</span></span>
+                            <span>Last sync: <span id="last-sync-time">Never</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Attendance List -->
+                    <div class="glass-card" style="padding: var(--medium-spacing); margin-top: var(--medium-spacing);">
+                        <div class="attendance-tabs">
+                            <button class="tab-btn active" data-tab="present">Present</button>
+                            <button class="tab-btn" data-tab="absent">Absent</button>
+                            <button class="tab-btn" data-tab="all">All</button>
+                        </div>
+
+                        <div style="position: relative; margin-bottom: var(--medium-spacing);">
+                            <i class="fas fa-search"
+                                style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                            <input type="text" id="student-search" class="glass-input" placeholder="Search students..."
+                                style="padding-left: 44px;">
+                        </div>
+
+                        <div class="student-list" id="attendance-list"></div>
+
+                        <div style="margin-top: var(--medium-spacing); text-align: right;">
+                            <button class="stroke-btn" id="export-csv-btn">
+                                <i class="fas fa-download"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     SETTINGS TAB - Index 2
+                     ========================================== -->
+                <div id="settings-screen" class="screen settings-screen hidden">
+                    <!-- Profile Section -->
+                    <div class="glass-card profile-section">
+                        <div class="profile-avatar-large">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="profile-name" id="profile-name">Demo User</div>
+                        <div class="profile-role" id="profile-role">Faculty</div>
+                    </div>
+
+                    <!-- Batch Settings (Admin Only) -->
+                    <div class="glass-card settings-section" data-admin-only>
+                        <h3 class="section-title">
+                            <i class="fas fa-layer-group"></i> Batch Settings
+                        </h3>
+                        <div class="custom-dropdown" id="batch-dropdown-wrapper">
+                            <button class="dropdown-trigger" id="batch-trigger">
+                                <span class="dropdown-text">Select Batch...</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                            <input type="hidden" id="batch-dropdown" value="">
+                        </div>
+                        <button class="gradient-btn" id="sync-batch-btn" data-admin-only
+                            style="width: 100%; margin-top: var(--medium-spacing);">
+                            <i class="fas fa-sync"></i> Sync All Classes
+                        </button>
+                        <button class="stroke-btn" id="add-batch-btn" data-admin-only
+                            style="width: 100%; margin-top: var(--small-spacing); border-color: var(--techwing-orange); color: var(--techwing-orange);">
+                            <i class="fas fa-plus"></i> Create New Batch
+                        </button>
+                        
+                        <div style="border-top: 1px solid var(--border-color); margin-top: var(--medium-spacing); padding-top: var(--medium-spacing);">
+                            <button class="stroke-btn" id="download-template-btn"
+                                style="width: 100%; border-color: var(--techwing-cyan); color: var(--techwing-cyan);">
+                                <i class="fas fa-file-download"></i> Download Excel Template
+                            </button>
+                            <button class="stroke-btn" id="import-excel-btn" data-admin-only
+                                style="width: 100%; margin-top: var(--small-spacing); border-color: var(--techwing-green); color: var(--techwing-green);">
+                                <i class="fas fa-file-upload"></i> Import Student List (.xlsx)
+                            </button>
+                            <input type="file" id="excel-file-input" accept=".xlsx" class="hidden">
+                        </div>
+                    </div>
+
+                    <!-- Batch Dropdown Portal -->
+                    <div class="dropdown-menu-portal" id="batch-menu-portal">
+                        <div class="dropdown-menu" id="batch-menu"></div>
+                    </div>
+
+                    <!-- Class Management -->
+                    <div class="glass-card settings-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-graduation-cap"></i> Classes
+                        </h3>
+                        <div class="class-list" id="settings-class-list"></div>
+                    </div>
+
+                    <!-- App Info & Logout -->
+                    <div class="glass-card settings-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-info-circle"></i> App Info
+                        </h3>
+                        <div
+                            style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: var(--medium-spacing);">
+                            <p>TechWing Attendance v1.0.0</p>
+                            <p>© 2024 TechWing Education</p>
+                        </div>
+                        <button class="stroke-btn logout-btn" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 BOTTOM NAVIGATION - 3 Tabs like Flutter
+                 ========================================== -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-screen="home">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Scanner</span>
+                </button>
+                <button class="nav-item" data-screen="dashboard">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-screen="settings" id="nav-settings-btn">
+                    <i class="fas fa-cog" id="nav-settings-icon"></i>
+                    <span id="nav-settings-label">Settings</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container"></div>
+    </div>
+
+    <!-- ==========================================
+         ADD BATCH MODAL
+         ========================================== -->
+    <div id="add-batch-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <h3 class="modal-title">Create New Batch</h3>
+            <div class="input-group">
+                <i class="fas fa-fingerprint input-icon"></i>
+                <input type="text" id="new-batch-id" class="glass-input" placeholder="Batch ID (e.g., 2024-CSE-A)">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-tag input-icon"></i>
+                <input type="text" id="new-batch-name" class="glass-input" placeholder="Batch Name (e.g., CSE Alpha)">
+            </div>
+            <div class="modal-actions">
+                <button class="stroke-btn" id="cancel-batch-btn">Cancel</button>
+                <button class="gradient-btn" id="save-batch-btn">Create Batch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         ADD STUDENT MODAL
+         ========================================== -->
+    <div id="add-student-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <h3 class="modal-title">Add Student</h3>
+            <div class="input-group">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" id="new-student-name" class="glass-input" placeholder="Full Name">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-id-card input-icon"></i>
+                <input type="text" id="new-student-pin" class="glass-input" placeholder="PIN Number">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-phone input-icon"></i>
+                <input type="tel" id="new-student-phone" class="glass-input" placeholder="Phone Number">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-envelope input-icon"></i>
+                <input type="email" id="new-student-email" class="glass-input" placeholder="Email Address">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;">
+                    <i class="fas fa-code-branch input-icon"></i>
+                    <input type="text" id="new-student-branch" class="glass-input" placeholder="Branch">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <i class="fas fa-layer-group input-icon"></i>
+                    <input type="text" id="new-student-combo" class="glass-input" placeholder="Combo">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="stroke-btn" id="cancel-student-btn">Cancel</button>
+                <button class="gradient-btn" id="save-student-btn">Add Student</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         EXCEL IMPORT CONFIRM MODAL
+         ========================================== -->
+    <div id="import-confirm-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content" style="max-width: 500px; width: 90%;">
+            <h3 class="modal-title">Confirm Import</h3>
+            <div id="import-summary-container" style="margin-bottom: var(--medium-spacing); font-size: 0.95rem; color: var(--text-primary); line-height: 1.5;">
+                <!-- Summary info gets dynamically generated -->
+            </div>
+            <div style="max-height: 200px; overflow-y: auto; margin-bottom: var(--medium-spacing); border-radius: var(--border-radius-small); border: 1px solid var(--border-color); background: rgba(0,0,0,0.2);">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; color: var(--text-primary);">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 10px; font-weight: 600;">Branch</th>
+                            <th style="padding: 10px; text-align: center; font-weight: 600;">Students</th>
+                            <th style="padding: 10px; text-align: center; font-weight: 600;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="import-details-table-body">
+                        <!-- Detailed parsed rows -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-actions">
+                <button class="stroke-btn" id="cancel-import-btn">Cancel</button>
+                <button class="gradient-btn" id="confirm-import-btn">Confirm & Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        window.onerror = function (msg, url, line) {
+            alert('JS Error: ' + msg + '\nLine: ' + line + '\nURL: ' + url);
+            // Also try to show in toast
+            const toast = document.createElement('div');
+            toast.className = 'toast error';
+            toast.textContent = 'Error: ' + msg;
+            document.getElementById('toast-container')?.appendChild(toast);
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

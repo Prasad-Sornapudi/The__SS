@@ -1,0 +1,2 @@
+# Requirements for secret obfuscation scripts
+cryptography>=3.4.8

@@ -1,0 +1,80 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Secrets
+service_account.json
+skillsync-free-default-rtdb-export.json
+New Batch .json
+
+# Node dependencies
+node_modules/
+
+# Design assets & large binary files
+*.zip
+*.aep
+Adobe After Effects Auto-Save/
+Splash Screen folder/
+Render Comp 2.json
+
+# Temporary/fix/debug/backup/log scripts
+fix_*.dart
+fix_*.js
+debug_*.dart
+test_*.dart
+*_test.dart
+*.bak
+analysis_output*.txt
+trigger_sync.dart
+minimal_plugin_test.dart
+helper_classes.dart
+temp_start.dart
+fixed_google_sheets_service.dart
+complete_google_sheets_service.dart
+temporary_fixed_google_sheets_service.dart
+lib/services/google_sheets_service_backup2.dart
+lib/services/google_sheets_service_corrupted.dart
+lib/services/department_sheet_service_original.dart
+lib/screens/dashboard_screen_backup.dart

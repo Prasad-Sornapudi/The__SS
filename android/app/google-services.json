@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "483631601866",
+    "firebase_url": "https://skillsync-free-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "skillsync-free",
+    "storage_bucket": "skillsync-free.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:483631601866:android:602f91d36f72a5b8073c33",
+        "android_client_info": {
+          "package_name": "com.techwing.skill_sync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkmLL5KbVGhunDfW_FmYDYIlpe_qpJs1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

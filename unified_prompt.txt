@@ -1,0 +1,189 @@
+# Skill Sync Application: Grand Unified Master Specification (V11)
+
+## 1. Project Overview & Identity
+*   **App Name**: Skill Sync
+*   **Version**: V11.0 (The Grand Unified System)
+*   **Core Philosophy**: **Zero Ambiguity & Explicit Authority**.
+*   **Platform**: Flutter (Android/iOS/Web).
+*   **Architecture**: Layered (Screens -> Providers -> Services -> Repositories).
+*   **Key Principle**: "Offline First, Logic Gated, UI Reflected".
+    *   *Correctness determines UI, never the reverse.*
+
+---
+
+## 2. Technology Stack
+*   **Framework**: Flutter (Stable Channel).
+*   **State Management**: `Provider` (Scoped access).
+*   **Local Database**: `Hive` (Encrypted boxes).
+*   **Backend**: Firebase (Auth, Firestore, Realtime Database, Remote Config).
+*   **Integration**: Google Sheets API (via `googleapis`, `googleapis_auth`).
+*   **Hardware**: `mobile_scanner` (Camera), `wakelock_plus` (Screen persistence).
+*   **Utilities**: `uuid`, `intl`, `connectivity_plus`, `logger`.
+
+---
+
+## 3. Strict Logic & Authority (The V10 Contract)
+
+### A. Data Authority
+*   **Roster (Class/Batch/Student)**: **Google Sheets (App_Control)**.
+    *   *App is Read-Only for Roster Structure.*
+    *   *Combos created in Sheet -> App pulls Config.*
+*   **Attendance Data**: **Firebase + Hive (Hybrid)**.
+    *   *Firebase = Source of Truth for "Present".*
+    *   *Hive = Offline Cache & Queue.*
+
+### B. Core Data Models
+1.  **AttendanceRecord** (The Atom):
+    *   `id` (PK): `"${classId}_${pin}_${date}"` (Strict Idempotency - One Present per Day per Class).
+    *   `sessionId` (FK): **Required**. UUID linking to a specific `SessionModel`.
+    *   `studentPin`: String (Normalized).
+    *   `status`: `enum { present }`. (Absent is implicit).
+    *   `isSynced`: Bool (Local Only).
+    *   `clockMismatch`: Bool (Client computed, Informational).
+
+2.  **SessionModel** (The Gate):
+    *   `sessionId` (PK): UUID.
+    *   `classId`: `"${batchId}_${comboId}"`.
+    *   `finalized`: Bool (True = Closed/Reported).
+    *   *Constraint*: Service Layer **THROWS** if attendance created without active session.
+
+### C. Conflict Resolution
+*   **Multi-Device Overwrite**:
+    *   *Rule*: `allow write: if !data.exists() || newData.timestamp < existing.timestamp`.
+    *   *Meaning*: Earliest valid scan wins. Faculty cannot overwrite history unless correcting a later timestamp. Admin can always write.
+*   **Duplicate Scans**:
+    *   *Logic*: Check Hive -> If present, UI Error. Check Server -> If 409 Rejected, UI Error.
+*   **Offline Merge**:
+    *   *Strategy*: Union of all records. Logical Session = Class + Date.
+
+---
+
+## 4. Application Architecture & Folder Structure
+
+### A. Directory Tree (Frozen)
+```
+lib/
+├── main.dart                  # App Entry, Global Providers, Hive Init
+├── constants/                 # AppColors, Strings, Assets
+├── layout/                    # ResponsiveLayout (Web/Mobile wrappers)
+├── models/                    # Hive Adapters & JSON Logic
+│   ├── attendance_record.dart
+│   ├── class_model.dart
+│   ├── session_model.dart
+│   ├── mock_interview.dart
+│   └── student_details.dart
+├── providers/                 # State Management
+│   ├── attendance_provider.dart  # Session State, Scan Queue
+│   ├── class_provider.dart       # Batch/Combo Selection
+│   └── user_provider.dart        # Auth State, Role Logic
+├── screens/                   # UI Pages (Logic-Free)
+│   ├── splash_screen.dart
+│   ├── login_screen.dart
+│   ├── home_screen.dart       # Main Dashboard
+│   ├── scanner_screen.dart    # QR Camera view
+│   ├── class_details_screen.dart # Attendance List View
+│   ├── settings_screen.dart
+│   ├── mock_interview_*_screen.dart
+│   └── ... (Debug/Test screens)
+├── services/                  # Business Logic & External I/O
+│   ├── auth_service.dart
+│   ├── hybrid_sync_service.dart  # The Sync Engine
+│   ├── google_sheets_service.dart # GSheet API Handler
+│   ├── firebase_service.dart     # RTDB/Firestore Handler
+│   ├── hive_service.dart         # Local DB Handler
+│   └── ... (Specific Sheet Services)
+├── widgets/                   # Reusable UI Components
+│   ├── unified_scanner_widget.dart # Camera Controller Wrapper
+│   ├── attendance_check_widget.dart
+│   ├── dashboard_widgets.dart
+│   └── settings_widgets.dart
+└── utils/                     # Helpers (DateFmt, Parsers)
+```
+
+---
+
+## 5. Screen & UI Specifications
+
+### A. Login Screen
+*   **Func**: Email/Password Auth via Firebase.
+*   **Logic**: Fetch User Role -> Hydrate `UserProvider` -> Redirect to Home.
+
+### B. Home Dashboard
+*   **Widgets**:
+    *   `SessionSetupWidget`: Dropdowns for Batch/Combo. "Start Session" button.
+    *   `StatsCard`: "Total Scanned Today", "Sync Status".
+    *   `ActiveSessionCard`: If `activeSession != null`, show "Resume Scanning" | "End Session".
+*   **State**: Listens to `AttendanceProvider`.
+
+### C. Scanner Screen
+*   **Core**: `UnifiedScannerWidget` (Handles Camera Permission, Lifestyle, Torch).
+*   **Feedback**:
+    *   *Success*: Green Snackbar + Haptic + Beep.
+    *   *Duplicate*: Amber Snackbar + Vibration.
+    *   *Error*: Red Snackbar.
+*   **Input**: QR Code OR Manual Pin Entry Button.
+
+### D. Class Details Screen
+*   **View**: List of students in current session.
+*   **Sort**: "Present" first, then "Absent".
+*   **Search**: Filter by Name/Pin.
+*   **Action**: "Mark Present" (Manual override).
+
+### E. Settings Screen
+*   **Options**:
+    *   "Sync Now" (Force `HybridSyncService`).
+    *   "Theme" (Light/Dark).
+    *   "Debug Logs" (View Hive logs).
+    *   "Manage Classes" (Admin Only).
+
+---
+
+## 6. Logic Flows (The "Why" and "How")
+
+### A. Starting a Session
+1.  User Selects Batch + Combo.
+2.  `AttendanceProvider` checks for *active* existing session in Hive.
+3.  If none -> Creates `SessionModel` -> Generates UUID -> Writes to Hive -> Syncs to Firebase.
+4.  App switches to `ScannerMode`.
+
+### B. Scanning a Student
+1.  Camera detects QR string.
+2.  `AttendanceProvider.markPresent(pin)` called.
+3.  **Check 1**: Is Session Active? (Gate).
+4.  **Check 2**: Is Duplicate in Hive? (Local Check).
+5.  If Valid:
+    *   Create `AttendanceRecord`.
+    *   Save to Hive (`isSynced=false`).
+    *   Trigger Background Sync -> Firebase.
+    *   Return "Success".
+
+### C. Ending a Session
+1.  User clicks "End Session".
+2.  `SessionModel.endTime` set to `now`.
+3.  `SessionModel.finalized` set to `true`.
+4.  Write to Hive -> Sync to Firebase.
+5.  Clear `activeSession` from Provider.
+
+### D. Sync & Recovery
+1.  **Monitor**: `ConnectivityService` listens for Internet.
+2.  **Online**: `HybridSyncService` iterates `HiveBox('attendance')` where `isSynced == false`.
+3.  **Push**: Writes to Firebase. On Success -> Set `isSynced = true`.
+4.  **Fail**: Keep `isSynced = false`. Retry next cycle.
+
+---
+
+## 7. Security & Deployment
+
+### A. Firebase Security Rules (V10 Final)
+*   **Atomicity**: Writes rejected if Session Doc is missing or `finalized=true`.
+*   **Time Travel**: Writes rejected if `newData.ts > existing.ts`.
+*   **Role**: Admin has bypass authority.
+
+### B. CI/CD Requirements
+*   `flutter analyze`: Must be clean (0 issues).
+*   `flutter test`: Critical paths coverage > 60%.
+*   `secrets`: No keys in git (Use `.env` / Remote Config).
+
+---
+**This document is the "Grand Unified Theory" of the Skill Sync Application.**
+*It contains every implicit and explicit rule, path, and behavior.*

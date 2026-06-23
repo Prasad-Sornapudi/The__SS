@@ -1,0 +1,29 @@
+{
+  "name": "skillsync_fbdb_qoder--",
+  "version": "1.0.0",
+  "description": "Skill Sync is a Flutter-based mobile application designed for QR code-based attendance tracking with Google Sheets integration. The app provides robust synchronization capabilities to ensure data consistency across multiple devices and offline scenarios.",
+  "main": "fix_batch_structure.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Prasad-Sornapudi/The__SS.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Prasad-Sornapudi/The__SS/issues"
+  },
+  "homepage": "https://github.com/Prasad-Sornapudi/The__SS#readme",
+  "dependencies": {
+    "firebase-admin": "^13.6.0"
+  }
+}

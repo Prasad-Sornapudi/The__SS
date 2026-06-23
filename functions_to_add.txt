@@ -1,0 +1,184 @@
+  
+  /// Edit student details in Google Sheets
+  static Future<String?> editStudent({
+    required Student updatedStudent,
+    required ClassModel classModel,
+    required String serviceAccountKey,
+  }) async {
+    try {
+      print('=== EDITING STUDENT IN GOOGLE SHEETS ===');
+      print('Student: ${updatedStudent.name} (${updatedStudent.pinNumber})');
+      print('Class: ${classModel.className}');
+      print('Sheet name: ${classModel.sheetName}');
+      
+      if (serviceAccountKey.isEmpty) {
+        throw Exception('Service account key not configured');
+      }
+
+      // Use MASTER sheet URL from control sheet instead of attendance sheet
+      final masterSheetUrl = await ControlSheetService.getMasterSheetUrlForBatch(classModel.sheetName ?? classModel.className);
+      if (masterSheetUrl == null || masterSheetUrl.isEmpty) {
+        throw Exception('No master sheet URL configured in control sheet');
+      }
+      
+      // Parse service account credentials
+      Map<String, dynamic> serviceAccountJson;
+      try {
+        serviceAccountJson = json.decode(serviceAccountKey);
+        print('✓ Service account JSON parsed successfully');
+      } catch (e) {
+        throw Exception('Invalid service account JSON format: $e');
+      }
+      
+      // Validate required fields in service account key
+      final requiredFields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email', 'client_id', 'auth_uri', 'token_uri'];
+      for (final field in requiredFields) {
+        if (!serviceAccountJson.containsKey(field) || serviceAccountJson[field] == null) {
+          throw Exception('Missing required field in service account key: $field');
+        }
+      }
+      
+      if (serviceAccountJson['type'] != 'service_account') {
+        throw Exception('Invalid service account type. Expected "service_account", got "${serviceAccountJson['type']}"');
+      }
+      
+      print('✓ Service account key validation passed');
+      print('📧 Service account email: ${serviceAccountJson['client_email']}');
+      
+      ServiceAccountCredentials credentials;
+      try {
+        credentials = ServiceAccountCredentials.fromJson(serviceAccountJson);
+        print('✓ Service account credentials created');
+      } catch (e) {
+        throw Exception('Failed to create service account credentials: $e');
+      }
+
+      // Authenticate
+      print('🔐 Authenticating with Google Sheets API...');
+      final client = await clientViaServiceAccount(
+        credentials,
+        AppConstants.requiredScopes,
+      );
+
+      print('✓ Authentication successful!');
+      
+      final sheetsApi = sheets.SheetsApi(client);
+      
+      final spreadsheetId = GoogleSheetsService.extractSpreadsheetId(masterSheetUrl);
+      print('📄 Spreadsheet ID: $spreadsheetId');
+      
+      // Get existing data to find the student row
+      String range = 'A:ZZZ'; // Default range for single sheet
+      if (classModel.sheetName != null && classModel.sheetName!.isNotEmpty) {
+        range = _createRangeWithSheet(classModel.sheetName, 'A:ZZZ'); // Specific sheet range
+      }
+      
+      print('Using data range: $range for fetching existing data');
+      
+      final studentResponse = await sheetsApi.spreadsheets.values.get(
+        spreadsheetId,
+        range,
+      );
+
+      final studentValues = studentResponse.values ?? [];
+      
+      // Find the row with the student's PIN number
+      int? studentRow;
+      for (int i = 1; i < studentValues.length; i++) { // Skip header row
+        if (studentValues[i].length > 1 && studentValues[i][1].toString().trim() == updatedStudent.pinNumber) {
+          studentRow = i + 1; // 1-based indexing
+          print('Found student at row: $studentRow');
+          break;
+        }
+      }
+      
+      if (studentRow == null) {
+        print('❌ Student not found in Google Sheets');
+        client.close();
+        return 'Student not found in Google Sheets';
+      }
+      
+      // Prepare updated student data
+      final updatedStudentData = [
+        updatedStudent.name,
+        updatedStudent.pinNumber,
+        updatedStudent.branch,
+        updatedStudent.email,
+        updatedStudent.mobileNumber,
+        updatedStudent.combo,
+        updatedStudent.securityCodes.join(', ')
+      ];
+      
+      // Update student data in the sheet
+      String updateRange = 'A$studentRow';
+      if (classModel.sheetName != null && classModel.sheetName!.isNotEmpty) {
+        updateRange = _createRangeWithSheet(classModel.sheetName, 'A$studentRow');
+      }
+      
+      print('Updating range: $updateRange with student data');
+      
+      final valueRange = sheets.ValueRange(
+        range: updateRange,
+        values: [updatedStudentData],
+      );
+      
+      final updateResponse = await sheetsApi.spreadsheets.values.update(
+        valueRange,
+        spreadsheetId,
+        updateRange,
+        valueInputOption: 'RAW',
+      );
+      
+      print('✅ Student updated successfully');
+      print('  Updated range: ${updateResponse.updatedRange}');
+      print('  Updated cells: ${updateResponse.updatedCells}');
+      
+      client.close();
+      return null; // Return null for success
+      
+    } catch (e) {
+      print('❌ Error editing student: $e');
+      return 'Failed to edit student: $e';
+    }
+  }
+  
+  /// Utility function to properly format sheet names for Google Sheets API
+  /// Wraps ALL sheet names in single quotes to avoid parsing issues
+  static String _formatSheetName(String? sheetName) {
+    print('🔍 DEBUG: _formatSheetName called with: "$sheetName" (type: ${sheetName.runtimeType})');
+    
+    if (sheetName == null || sheetName.isEmpty) {
+      print('🔍 DEBUG: sheetName is null or empty, returning empty string');
+      return '';
+    }
+    
+    // Log for debugging
+    print('🔍 Formatting sheet name: "$sheetName"');
+    
+    // ALWAYS quote sheet names to avoid parsing issues
+    // Escape any single quotes in the sheet name
+    final escapedSheetName = sheetName.replaceAll("'", "''");
+    final result = "'$escapedSheetName'";
+    print('🔍 DEBUG: Returning quoted sheet name: "$result"');
+    return result;
+  }
+
+  /// Utility function to create a properly formatted range with sheet name
+  static String _createRangeWithSheet(String? sheetName, String rangeSuffix) {
+    print('🔍 DEBUG: _createRangeWithSheet called with sheetName: "$sheetName", rangeSuffix: "$rangeSuffix"');
+    
+    if (sheetName == null || sheetName.isEmpty) {
+      print('🔍 DEBUG: sheetName is null or empty, returning rangeSuffix: "$rangeSuffix"');
+      return rangeSuffix;
+    }
+    
+    // Log for debugging
+    print('🔍 Creating range with sheet name: "$sheetName" and suffix: "$rangeSuffix"');
+    
+    final formattedSheetName = _formatSheetName(sheetName);
+    final result = '$formattedSheetName!$rangeSuffix';
+    
+    print('🔍 Created range: "$result"');
+    return result;
+  }
+}

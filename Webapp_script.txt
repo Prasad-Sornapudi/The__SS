@@ -1,0 +1,363 @@
+// ==========================================
+// CONFIGURATION
+// ==========================================
+var FIREBASE_DATABASE_URL = 'https://skillsync-free-default-rtdb.asia-southeast1.firebasedatabase.app';
+var FIREBASE_SECRET = PropertiesService.getScriptProperties().getProperty('FIREBASE_SECRET');
+
+// ==========================================
+// WEB APP ENTRY POINT (doPost)
+// ==========================================
+function doPost(e) {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) {
+    return createJsonResponse({ status: "error", message: "Server is busy." });
+  }
+
+  try {
+    var rawData = e.postData ? e.postData.contents : '{}';
+    var requestPayload;
+    try {
+      requestPayload = JSON.parse(rawData);
+    } catch (jsonError) {
+      return createJsonResponse({ status: "error", message: "Invalid JSON format." });
+    }
+
+    var action = requestPayload.action;
+    console.log('Action received: ' + action);
+
+    switch (action) {
+      case 'processJobs':
+        processOutgoingJobs();
+        return createJsonResponse({ success: true, message: 'Job processing triggered.' });
+      case 'syncCredentials':
+        syncAllLoginCredentials();
+        return createJsonResponse({ success: true, message: 'Credentials synced.' });
+      case 'syncClasses': 
+        syncAllBatches();
+        return createJsonResponse({ success: true, message: 'Batches synced.' });
+      case 'testFirebaseConnection':
+        testFirebaseConnection();
+        return createJsonResponse({ success: true, message: 'Connection OK.' });
+      default:
+        return createJsonResponse({ success: false, message: 'Unknown action.' });
+    }
+  } catch (error) {
+    console.error('Error in doPost: ' + error.toString());
+    return createJsonResponse({ success: false, message: 'Error: ' + error.toString() });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput('Skill Sync App_Control is Online');
+}
+
+// ==========================================
+// TRIGGERS (UPDATED FOR "ON CHANGE")
+// ==========================================
+function onSpreadsheetEdit(e) {
+  var lock = LockService.getScriptLock();
+  if (lock.tryLock(30000)) {
+    try {
+      Logger.log('Trigger fired. Change Type: ' + (e ? e.changeType : 'unknown'));
+      
+      // Handle Sheet Insertions/Deletions (REMOVE_GRID / INSERT_GRID)
+      if (e && (e.changeType === 'INSERT_GRID' || e.changeType === 'REMOVE_GRID')) {
+         console.log('Sheet structure changed. Syncing all batches...');
+         syncAllBatches();
+      } 
+      // Handle Normal Edits
+      else {
+         var sheetName = SpreadsheetApp.getActiveSheet().getName();
+         if (sheetName === 'Login_Credentials') {
+           syncAllLoginCredentials();
+         } else {
+           syncAllBatches();
+         }
+      }
+    } catch (error) {
+      console.error('Error in onSpreadsheetEdit: ' + error.toString());
+    } finally {
+      lock.releaseLock();
+    }
+  }
+}
+
+function onOpen(e) {
+  SpreadsheetApp.getUi()
+    .createMenu('Skill Sync Admin')
+    .addItem('Sync All Data to Firebase', 'manualSyncAllData')
+    .addToUi();
+}
+
+function manualSyncAllData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ui = SpreadsheetApp.getUi();
+  try {
+    ss.toast('Starting manual sync...', 'Skill Sync');
+    syncAllLoginCredentials();
+    syncAllBatches();
+    ui.alert('Success', 'All data synced.', ui.ButtonSet.OK);
+  } catch (error) {
+    ui.alert('Error', 'Failed to sync: ' + error.toString(), ui.ButtonSet.OK);
+  }
+}
+
+// ==========================================
+// SYNC LOGIC (WITH DELETION HANDLING)
+// ==========================================
+function syncAllBatches() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheets = ss.getSheets();
+    
+    // 1. Get Current Batches from Sheet
+    var currentBatches = {};
+    sheets.forEach(function(sheet) {
+      var name = sheet.getName();
+      if (name === 'Login_Credentials') return;
+
+      // Read Row 2. We need up to Column L (12 columns)
+      // A: Master Name, B: Master Link, C: Master Creds
+      // D: Att Name,    E: Att Link,    F: Att Creds
+      // G: Mock Name,   H: Mock Link,   I: Mock Creds
+      // J: Dept Name,   K: Dept Link,   L: Dept Creds
+      
+      var data = sheet.getRange("A2:L2").getValues()[0];
+
+      if (data[1]) { // If Master Link exists
+        currentBatches[name] = {
+          config: {
+            masterSheet: { link: data[1] || "", credentials: data[2] || "" },
+            attendanceSheet: { link: data[4] || "", credentials: data[5] || "" },
+            mockSheet: { link: data[7] || "", credentials: data[8] || "" },
+            departmentSheet: { link: data[10] || "", credentials: data[11] || "" }
+          },
+          lastUpdated: new Date().toISOString()
+        };
+      }
+    });
+
+    // 2. Get Existing Batches from Firebase to detect deletions
+    var existingBatches = readFromFirebase('/batches') || {};
+
+    // 3. Find Batches to Delete (Exist in Firebase but NOT in Sheet)
+    var batchesToDelete = [];
+    for (var batchId in existingBatches) {
+      if (!currentBatches.hasOwnProperty(batchId)) {
+        batchesToDelete.push(batchId);
+      }
+    }
+
+    // 4. Delete Removed Batches
+    if (batchesToDelete.length > 0) {
+      batchesToDelete.forEach(function(batchId) {
+        deleteFromFirebase('/batches/' + batchId);
+        console.log('🗑️ Deleted batch from Firebase: ' + batchId);
+      });
+    }
+
+    // 5. Update/Create Current Batches
+    if (Object.keys(currentBatches).length > 0) {
+       writeToFirebase('/batches', currentBatches);
+       console.log('✅ Synced ' + Object.keys(currentBatches).length + ' batches.');
+    } else {
+       // If no batches left, ensure node is empty
+       writeToFirebase('/batches', {});
+    }
+
+  } catch (error) {
+    console.error('Error syncing batches: ' + error.toString());
+  }
+}
+
+function syncAllLoginCredentials() {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Login_Credentials');
+    if (!sheet) return;
+    var data = sheet.getDataRange().getValues();
+    var credentials = [];
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][0] && data[i][1]) {
+        credentials.push({
+          name: data[i][0],
+          username: data[i][1],
+          password: data[i][2],
+          role: data[i][3]
+        });
+      }
+    }
+    writeToFirebase('/sync/sheetSync/loginCredentials', {
+      credentials: credentials,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error syncing credentials: ' + error.toString());
+  }
+}
+
+// ==========================================
+// JOB PROCESSING
+// ==========================================
+function processOutgoingJobs() {
+  var batches = readFromFirebase('/batches');
+  if (!batches) return;
+
+  var jobsData = readFromFirebase('/outgoingToSheets');
+  if (!jobsData) return;
+
+  for (var jobId in jobsData) {
+    var job = jobsData[jobId];
+    try {
+      var batchId = job.classId;
+      var batchData = batches[batchId];
+
+      if (!batchData) {
+        updateJobStatus(jobId, 'failed', 'Batch not found: ' + batchId);
+        continue;
+      }
+
+      updateJobStatus(jobId, 'processing');
+
+      if (job.jobType === 'attendance') {
+        processAttendanceJob(job, batchData.config);
+      } else {
+        updateJobStatus(jobId, 'failed', 'Unknown job type');
+        continue;
+      }
+
+      deleteFromFirebase('/outgoingToSheets/' + jobId);
+
+    } catch (e) {
+      updateJobStatus(jobId, 'failed', e.toString());
+    }
+  }
+}
+
+function processAttendanceJob(job, config) {
+  var link = config.attendanceSheet.link;
+  if (!link) throw new Error('Attendance Link missing.');
+
+  var spreadsheetId = extractSpreadsheetId(link);
+  var targetTabName = job.sheetName || job.combo || job.classId;
+
+  updateAttendanceSheetWithAPI(spreadsheetId, targetTabName, job.data.date, job.data.students);
+}
+
+// ==========================================
+// UTILS & FIREBASE
+// ==========================================
+function updateAttendanceSheetWithAPI(spreadsheetId, sheetName, date, students) {
+  var quotedSheetName = quoteSheetName(sheetName);
+  var sheetId = getSheetIdByName(spreadsheetId, sheetName);
+  if (sheetId === null) throw new Error('Tab "' + sheetName + '" not found.');
+
+  var columnIndex = getColumnIndexForDate(spreadsheetId, quotedSheetName, date);
+  if (columnIndex === -1) columnIndex = createDateColumn(spreadsheetId, quotedSheetName, date);
+
+  var requests = [];
+  students.forEach(function(s, i) {
+    var rowIndex = i + 2;
+    requests.push({
+      updateCells: {
+        range: { sheetId: sheetId, startRowIndex: rowIndex - 1, endRowIndex: rowIndex, startColumnIndex: columnIndex - 1, endColumnIndex: columnIndex },
+        rows: [{ values: [{ userEnteredValue: { stringValue: s.status || 'Absent' } }] }],
+        fields: 'userEnteredValue'
+      }
+    });
+  });
+
+  if (requests.length > 0) Sheets.Spreadsheets.batchUpdate({ requests: requests }, spreadsheetId);
+}
+
+function getSheetIdByName(spreadsheetId, sheetName) {
+  try {
+    var sheets = Sheets.Spreadsheets.get(spreadsheetId).sheets;
+    for (var i = 0; i < sheets.length; i++) {
+      if (sheets[i].properties.title === sheetName) return sheets[i].properties.sheetId;
+    }
+    return null;
+  } catch (e) { return null; }
+}
+
+function getColumnIndexForDate(spreadsheetId, sheetName, targetDate) {
+  try {
+    var range = sheetName + '!1:1';
+    var response = Sheets.Spreadsheets.Values.get(spreadsheetId, range);
+    var headers = response.values ? response.values[0] : [];
+    var formattedTarget = formatDateForSheet(targetDate);
+    for (var i = 0; i < headers.length; i++) {
+      if (headers[i] === formattedTarget) return i + 1;
+    }
+    return -1;
+  } catch (e) { return -1; }
+}
+
+function createDateColumn(spreadsheetId, sheetName, date) {
+  var range = sheetName + '!1:1';
+  var response = Sheets.Spreadsheets.Values.get(spreadsheetId, range);
+  var headers = response.values ? response.values[0] : [];
+  var newColIndex = headers.length + 1;
+  var formattedDate = formatDateForSheet(date);
+  var updateRange = sheetName + '!' + getColumnLetter(newColIndex) + '1';
+  Sheets.Spreadsheets.Values.update({ values: [[formattedDate]] }, spreadsheetId, updateRange, { valueInputOption: 'RAW' });
+  return newColIndex;
+}
+
+function getColumnLetter(colIndex) {
+  var letter = '';
+  var temp = colIndex;
+  while (temp > 0) {
+    var remainder = (temp - 1) % 26;
+    letter = String.fromCharCode(65 + remainder) + letter;
+    temp = Math.floor((temp - 1) / 26);
+  }
+  return letter;
+}
+
+function formatDateForSheet(dateString) {
+  try {
+    var date = new Date(dateString);
+    return Utilities.formatDate(date, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+  } catch (e) { return dateString; }
+}
+
+function quoteSheetName(name) {
+  return (name.indexOf(' ') > -1 || name.indexOf("'") > -1) ? "'" + name.replace(/'/g, "''") + "'" : name;
+}
+
+function extractSpreadsheetId(url) {
+  var match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : null;
+}
+
+function writeToFirebase(path, data) {
+  var url = FIREBASE_DATABASE_URL + path + '.json?auth=' + FIREBASE_SECRET;
+  UrlFetchApp.fetch(url, { method: 'put', contentType: 'application/json', payload: JSON.stringify(data), muteHttpExceptions: true });
+}
+
+function readFromFirebase(path) {
+  var url = FIREBASE_DATABASE_URL + path + '.json?auth=' + FIREBASE_SECRET;
+  var response = UrlFetchApp.fetch(url, { method: 'GET', muteHttpExceptions: true });
+  return (response.getResponseCode() === 200) ? JSON.parse(response.getContentText()) : null;
+}
+
+function deleteFromFirebase(path) {
+  var url = FIREBASE_DATABASE_URL + path + '.json?auth=' + FIREBASE_SECRET;
+  UrlFetchApp.fetch(url, { method: 'delete', muteHttpExceptions: true });
+}
+
+function updateJobStatus(jobId, status, error) {
+  var data = { status: status, lastUpdated: new Date().toISOString() };
+  if (error) data.error = error;
+  writeToFirebase('/outgoingToSheets/' + jobId + '/status', data);
+}
+
+function testFirebaseConnection() {
+  readFromFirebase('/test/connection');
+}
+
+function createJsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}

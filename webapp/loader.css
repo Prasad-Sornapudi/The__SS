@@ -1,0 +1,279 @@
+/* ==========================================
+   ULTIMATE SCI-FI LOADER - "QUANTUM GATE"
+   Static Logo • Geometric Motion • Premium Feel
+   ========================================== */
+
+:root {
+    --loader-primary: #FF8C00;
+    --loader-accent: #00D4FF;
+    --loader-bg: #030712;
+}
+
+/* MAIN CONTAINER */
+#loading-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--loader-bg);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+/* SUBTLE GRID BACKGROUND */
+#loading-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 140, 0, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 140, 0, 0.02) 1px, transparent 1px);
+    background-size: 80px 80px;
+    opacity: 0.5;
+}
+
+/* RADIAL GLOW CENTER */
+#loading-screen::after {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255, 140, 0, 0.15) 0%, transparent 70%);
+    animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+/* LOADER WRAPPER */
+.loader-wrapper {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* LOGO - ABSOLUTELY STATIC, CENTERED */
+.loader-logo {
+    position: absolute;
+    width: 120px;
+    height: auto;
+    z-index: 50;
+    filter: drop-shadow(0 0 25px rgba(255, 140, 0, 0.6));
+    /* NO ANIMATION - COMPLETELY STATIC */
+}
+
+/* OUTER RING - SLOW CLOCKWISE */
+.ring-outer {
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    border: 2px solid rgba(255, 140, 0, 0.15);
+    border-radius: 50%;
+    animation: rotateClockwise 12s linear infinite;
+}
+
+.ring-outer::before,
+.ring-outer::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: var(--loader-primary);
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--loader-primary), 0 0 40px var(--loader-primary);
+}
+
+.ring-outer::before {
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.ring-outer::after {
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* INNER RING - COUNTER CLOCKWISE */
+.ring-inner {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border: 1px dashed rgba(0, 212, 255, 0.2);
+    border-radius: 50%;
+    animation: rotateCounterClockwise 8s linear infinite;
+}
+
+.ring-inner::before,
+.ring-inner::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--loader-accent);
+    border-radius: 50%;
+    background: transparent;
+}
+
+.ring-inner::before {
+    left: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.ring-inner::after {
+    right: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* SCANNING LINE */
+.scan-line {
+    position: absolute;
+    width: 240px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--loader-accent), transparent);
+    animation: scanRotate 4s linear infinite;
+    opacity: 0.6;
+}
+
+@keyframes rotateClockwise {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes rotateCounterClockwise {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes scanRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* PROGRESS SECTION */
+.loader-progress-section {
+    position: absolute;
+    bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.loader-text {
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+}
+
+.loader-progress-bar {
+    width: 180px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+.loader-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--loader-primary), var(--loader-accent));
+    animation: progressAnim 3s ease-in-out forwards;
+}
+
+@keyframes progressAnim {
+    0% {
+        width: 0%;
+    }
+
+    30% {
+        width: 40%;
+    }
+
+    60% {
+        width: 70%;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+/* CORNER DECORATIONS */
+.corner-decor {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(255, 140, 0, 0.3);
+}
+
+.corner-decor.tl {
+    top: 40px;
+    left: 40px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.corner-decor.tr {
+    top: 40px;
+    right: 40px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.corner-decor.bl {
+    bottom: 40px;
+    left: 40px;
+    border-right: none;
+    border-top: none;
+}
+
+.corner-decor.br {
+    bottom: 40px;
+    right: 40px;
+    border-left: none;
+    border-top: none;
+}
+
+/* FADE OUT */
+#loading-screen.fade-out {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+}

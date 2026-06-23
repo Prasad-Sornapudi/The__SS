@@ -1,0 +1,130 @@
+name: skill_sync
+description: A Flutter application for QR-based attendance scanning
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Navigation
+  go_router: ^12.1.3
+  
+  provider: ^6.1.1
+  
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.2
+  
+  # QR Code Scanning
+  mobile_scanner: ^7.1.2
+  js: ^0.6.7
+  
+  # File Handling
+  file_picker: ^8.1.2
+  path_provider: ^2.1.1
+  
+  # CSV Parsing
+  csv: ^5.0.2
+  
+  permission_handler: ^11.1.0
+  
+  # HTTP for API calls
+  http: ^1.1.0
+  
+  # JSON serialization
+  json_annotation: ^4.8.1
+  
+  # Material Design Icons
+  cupertino_icons: ^1.0.2
+  
+  # Molten Navigation Bar
+  molten_navigationbar_flutter: ^1.0.0
+  
+  # Wake Lock to prevent screen from sleeping
+  wakelock_plus: ^1.2.5
+  
+  # Percent indicator for circular progress
+  percent_indicator: ^4.2.3
+  
+  # SVG support
+  flutter_svg: ^2.0.5
+  
+  # Dropdown package
+  cool_dropdown: ^2.1.1
+  
+  # Lottie animation support
+  lottie: ^3.3.2
+  
+  # Crypto for HMAC verification
+  crypto: ^3.0.3
+  oc_liquid_glass: ^0.2.1
+  firebase_core: ^4.2.1
+  firebase_database: ^12.1.0
+  cloud_firestore: ^6.1.0
+  connectivity_plus: ^7.0.0
+  google_fonts: ^6.3.2
+  googleapis: ^15.0.0
+  googleapis_auth: ^2.0.0
+  universal_html: ^2.3.0
+  share_plus: ^12.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # Code generation
+  build_runner: ^2.4.7
+  json_serializable: ^6.7.1
+  hive_generator: ^2.0.1
+  mockito: ^5.4.4
+  
+  # Linting
+  flutter_lints: ^3.0.0
+  
+  # App Icon Generation
+  flutter_launcher_icons: ^0.13.1
+  
+  # Splash Screen Generation
+  flutter_native_splash: ^2.3.10
+  test: ^1.26.2
+  archive: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/secret_part_1.txt
+    - assets/secret_part_2.txt
+    - assets/secret_part_3.txt
+    - assets/secret_hmac.txt
+
+    - assets/Splash_Screen.json
+
+# Flutter Launcher Icons Configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: false
+  image_path: "assets/images/app_icon.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+  windows:
+    generate: true
+    image_path: "assets/images/app_icon.png"
+    icon_size: 48
+
+# Flutter Native Splash Configuration
+flutter_native_splash:
+  color: "#0A1527"
+  image: assets/images/app_icon.png
+  android_12:
+    image: assets/images/app_icon.png
+    icon_background_color: "#0A1527"
+  web: false

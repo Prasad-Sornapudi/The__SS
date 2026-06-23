@@ -1,0 +1,37 @@
+{
+    "rules": {
+        "roles": {
+            ".read": "auth != null",
+            ".write": "root.child('roles').child(auth.uid).val() === 'admin'"
+        },
+        "batches": {
+            ".read": "auth != null",
+            ".write": "root.child('roles').child(auth.uid).val() === 'admin'"
+        },
+        "students": {
+            ".read": "auth != null",
+            ".write": "root.child('roles').child(auth.uid).val() === 'admin'"
+        },
+        "attendance": {
+            ".read": "auth != null",
+            ".write": "auth != null",
+            "$batchId": {
+                "$date": {
+                    "$pin": {
+                        "scans": {
+                            ".validate": "newData.hasChildren(['time', 'session', 'method'])"
+                        }
+                    }
+                }
+            }
+        },
+        "trainers": {
+            ".read": "auth != null",
+            ".write": false
+        },
+        "interviews": {
+            ".read": "auth != null",
+            ".write": "auth != null"
+        }
+    }
+}
