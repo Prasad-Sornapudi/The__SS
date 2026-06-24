@@ -2721,6 +2721,10 @@ function initManagementEvents() {
             } catch (error) {
                 console.error('Add student error:', error);
                 showToast('Failed to add student', 'error');
+            } finally {
+                saveStudentBtn.innerHTML = originalText;
+                saveStudentBtn.disabled = false;
+            }
         });
     }
 
